@@ -34,9 +34,24 @@ public class ClaimeList {
     public void saveToDb()
     {
         DBHelper db = new DBHelper(mContext);
-        Log.d(MainActivity3.TAG, "Загрузка заявок в БД");
+        Log.d(MainActivity.TAG, "Загрузка заявок в БД");
         db.saveClaimeListToDb(getItems());
-        Log.d(MainActivity3.TAG, "Загрузка заявок в БД завершена");
+        Log.d(MainActivity.TAG, "Загрузка заявок в БД завершена");
+    }
+
+    public void  deleteLocalClames()
+    {
+        DBHelper db = new DBHelper(mContext);
+        db.openDB();
+        db.beginTransaction();
+        try{
+            db.deleteClaimes();
+            mItems.clear();
+            db.setTransactionSuccessful();
+        }
+        finally {
+            db.endTransaction();
+        }
     }
 
     public void deleteClaime(Claime claime)
@@ -45,7 +60,7 @@ public class ClaimeList {
         db.openDB();
         db.beginTransaction();
         try{
-            db.deleteClaime(claime.getId());
+            int id = db.deleteClaime(claime.getId());
             mItems.remove(claime);
             db.setTransactionSuccessful();
         }

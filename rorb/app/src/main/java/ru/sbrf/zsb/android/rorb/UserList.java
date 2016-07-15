@@ -38,18 +38,17 @@ public class UserList extends RefObjectList<User> {
 
     @Override
     public void loadFromDb() {
-        addAll(mDb.getUserListFromDb());
+      //  addAll(mDb.getUserListFromDb());
     }
 
-    public User getLastSignInUser(){
-        return mDb.getLastSignInUserFromDb();
-    }
 
-    public User insertUserDb(User user) throws UserInsertDbException {
+    /*public User insertUserDb(User user) throws UserInsertDbException {
         return mDb.insertUserIntoDb(user);
     }
+
 
     public void deleteAllUsers(){
         mDb.deleteAllUsersFromDB();
     }
+    */
 }

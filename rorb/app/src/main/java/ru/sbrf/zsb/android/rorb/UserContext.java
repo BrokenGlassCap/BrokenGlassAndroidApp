@@ -16,8 +16,6 @@ import ru.sbrf.zsb.android.netload.NetFetcher;
 public class UserContext {
 
     private static UserContext mInstance;
-    private UserList mAllUsers;
-    private User mCurrentUser;
     private Context mContextApplication;
 
     public static UserContext getCurrentUserContext(Context ctx){
@@ -29,34 +27,17 @@ public class UserContext {
 
     public UserContext(Context ctx) {
         mContextApplication = ctx;
-        mAllUsers = UserList.get(ctx);
-        mCurrentUser = getLastSignInUser();
     }
 
-    public User getCurrentUser() {
-        return mCurrentUser;
-    }
-
-    private User getLastSignInUser(){
-         return mAllUsers.getLastSignInUser();
-    }
-
-    public User RegistrationUser(UserRegistrationModel user) throws UserRegistrationException, UserInsertDbException {
-        User result = new User();
+    public void registerUser(UserRegistrationModel user) throws UserRegistrationException {
         NetFetcher httpClient = new NetFetcher(mContextApplication);
         try{
             httpClient.userRegistration(user);
-            result = mAllUsers.insertUserDb(new User(user.getEmail(),user.getFirstName(),user.getLastName()));
         }
-        catch (UserRegistrationException ex){
+        catch (Exception ex){
             Log.e("ERROR",ex.getMessage());
             throw ex;
         }
-        catch(UserInsertDbException ex){
-            Log.e("ERROR",ex.getMessage());
-        }
-
-        return result;
     }
 
 

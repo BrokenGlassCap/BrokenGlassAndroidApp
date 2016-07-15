@@ -5,9 +5,10 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
-    <string name="task_activity_service_label">Сервис</string>
-    <string name="task_activity_info_label">Информация</string>
-    <string name="task_activity_address_label">Адрес</string>
+    <string name="task_activity_service_label">Сервис:</string>
+    <string name="task_activity_info_label">Инфо:</string>
+    <string name="task_activity_address_label">Адрес:</string>
+    <string name="task_activity_result_info_label">Решение:</string>
 
     <string name="add_photo_from_cam">Фото с камеры</string>
     <string name="add_photo_from_gal">Фото из галереи</string>
@@ -20,8 +21,8 @@
     <string name="confirm_title">Подтвердите</string>
     <string name="claime_saved_local">Заявка сохранена локально!</string>
     <string name="wait_sending_message">Дождитесь завершения отправки</string>
-    <string name="task_activity_photo_cnt_label">Кол-во фото: 0</string>
-    <string name="photo_cnt_label">"Кол-во фото: "</string>
+    <string name="task_activity_photo_cnt_label">Фото: 0</string>
+    <string name="photo_cnt_label">"Фото: "</string>
     <string name="del_photo_question">Удалить фото?</string>
     <string name="screen_one">Screen one</string>
     <string name="page">page</string>
@@ -31,4 +32,10 @@
     <string name="reg_password_txt_placeholder">Пароль</string>
     <string name="reg_pass_confirm_txt_placeholder">Подтвеждение пароля</string>
     <string name="reg_btn_ok">Зарегестрироваться</string>
+    <string name="logon_btn_ok">Вход</string>
+    <string name="no_login_data">Не задан email или пароль</string>
+    <string name="task_activity_title">Заявка</string>
+    <string name="logon_activity_title">Вход в систему</string>
+    <string name="address_activity_title">Адрес</string>
+    <string name="address_activity_search">Поиск по названию</string>
 </resources>

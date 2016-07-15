@@ -41,16 +41,17 @@ public class ClaimeStatusList extends RefObjectList<ClaimeStatus> {
 
     public ClaimeStatusList(Context c) {
         super(c);
-        addAllStatus();
+        //addAllStatus();
     }
 
-    private void addAllStatus() {
+   /* private void addAllStatus() {
         ClaimeStatus claimeStatus = new ClaimeStatus();
         claimeStatus.setId(STATUS_ALL_ID);
         claimeStatus.setName(mContext.getString(R.string.claime_status_all_name));
         claimeStatus.setCode(mContext.getString(R.string.claime_status_all_code));
         add(claimeStatus);
     }
+    */
 
     public static ClaimeStatusList get(Context c) {
         if (mList == null) {
@@ -84,8 +85,9 @@ public class ClaimeStatusList extends RefObjectList<ClaimeStatus> {
     public void loadFromDb() {
         DBHelper db = new DBHelper(mContext);
         clear();
-        addAllStatus();
-        this.addAll(db.getStatusListFromDb());
+        //addAllStatus();
+        ClaimeStatusList list = db.getStatusListFromDb();
+        this.addAll(list);
     }
 
 

@@ -3,6 +3,8 @@ package ru.sbrf.zsb.android.rorb;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Message;
@@ -16,12 +18,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -29,11 +32,14 @@ import org.json.JSONException;
 import java.io.IOException;
 
 import ru.sbrf.zsb.android.helper.ClaimeConstant;
+import ru.sbrf.zsb.android.helper.MyLocationManager;
+import ru.sbrf.zsb.android.helper.OnLocationDetectectionListener;
+import ru.sbrf.zsb.android.helper.Utils;
 import ru.sbrf.zsb.android.netload.NetFetcher;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        SwipeRefreshLayout.OnRefreshListener {
+        SwipeRefreshLayout.OnRefreshListener, OnLocationDetectectionListener {
     public static final String USER_TOKEN = "UserLogin";
     private static final int SHOW_PROGRESS = 1;
     private static final int STOP_PROGRESS = 2;
@@ -43,22 +49,42 @@ public class MainActivity extends AppCompatActivity
     private SwipeRefreshLayout swipeRefreshLayout;
     private ListView mListView;
     private SwipeListAdapter adapter;
-    public static final String TAG = "MainActivity3";
+    public static final String TAG = "MainActivity";
     private MyHandler mHandler;
 
     // initially offset will be 0, later will be updated while parsing the json
     private int offSet = 0;
     private ProgressBar mPropgress;
     private boolean mLoading;
+    private MyLocationManager mLocationManager;
 
     public boolean isLoading() {
         return mLoading;
     }
 
     @Override
+    public void onLocationDetected(Location mLocation) {
+        Utils.setCurrLocation(mLocation);
+        mLocationManager.startLocating();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mLocationManager = new MyLocationManager(this, this);
+        mLocationManager.startLocating();
+
+        initNavMenu();
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -66,43 +92,57 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (isLoading()) {
-                    Toast.makeText(MainActivity.this, getString(R.string.wait_loading_ens), Toast.LENGTH_SHORT).show();
-                } else {
-                    if (existsAllRefs()) {
-                        Intent i = new Intent(MainActivity.this,
-                                TaskActivity.class);
-                        i.putExtra(TaskActivity.EXTRA_TASK_ID, ClaimeConstant.NEW_CLAIME_ID);
-                        startActivity(i);
+
+                User user = User.getInstance(MainActivity.this);
+                try {
+                    //Проверка пользователя
+                    user.authorizedCheck();
+                    if (isLoading()) {
+                        Toast.makeText(MainActivity.this, getString(R.string.wait_loading_ens), Toast.LENGTH_SHORT).show();
+                    } else {
+                        if (existsAllRefs()) {
+                            Intent i = new Intent(MainActivity.this,
+                                    TaskActivity.class);
+                            i.putExtra(TaskActivity.EXTRA_TASK_ID, ClaimeConstant.NEW_CLAIME_ID);
+                            startActivity(i);
+                        } else {
+                            Toast.makeText(MainActivity.this, "Отсуствуют справочники, потяните экран вниз для обновления!", Toast.LENGTH_LONG).show();
+                        }
                     }
-                    else
-                    {
-                        Toast.makeText(MainActivity.this, "Отсуствуют справочники, потяните экран вниз для обновления!", Toast.LENGTH_LONG).show();
-                    }
+
+                } catch (UserNotAuthException e) {
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
+
             }
         });
 
         final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+        drawer.setDrawerListener( toggle);
+
         toggle.syncState();
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
 
         if (navigationView != null) {
-            navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener(){
+            navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
 
                 @Override
                 public boolean onNavigationItemSelected(MenuItem item) {
 
                     drawer.closeDrawers();
-                    switch (item.getItemId()){
-                        case R.id.registration_link :
+                    switch (item.getItemId()) {
+                        case R.id.registration_link:
 
                             Intent intentRegistration = new Intent(MainActivity.this, RegistrationActivity.class);
                             startActivity(intentRegistration);
                             return true;
+                        case R.id.login_link: {
+                            Intent intentLogon = new Intent(MainActivity.this, LogonActivity.class);
+                            startActivity(intentLogon);
+                            return true;
+                        }
                     }
 
 
@@ -113,10 +153,6 @@ public class MainActivity extends AppCompatActivity
 
         mPropgress = (ProgressBar) findViewById(R.id.main_activity_progressBar);
         mHandler = new MyHandler();
-
-        //AddressList addressList = AddressList.get(this);
-        //ServiceList serviceList = ServiceList.get(this);
-        //ClaimeStatusList claimeStatusList = ClaimeStatusList.get(this);
 
         mClaimeList = ClaimeList.get(this);
         reloadTasksFromLocal();
@@ -152,7 +188,13 @@ public class MainActivity extends AppCompatActivity
                                     }
                                 }
         );
+
     }
+
+
+
+
+
 
     //Проверка наличия значений в справочниках
     private boolean existsAllRefs() {
@@ -179,8 +221,7 @@ public class MainActivity extends AppCompatActivity
                     //Удаляем несохраненную заявку
                     if (mClaime != null) {
                         ClaimeList.get(MainActivity.this).deleteClaime(mClaime);
-                        if (MainActivity.this.adapter != null)
-                        {
+                        if (MainActivity.this.adapter != null) {
                             adapter.notifyDataSetChanged();
                         }
                     }
@@ -196,6 +237,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        initNavMenu();
         if (adapter != null) {
             adapter.notifyDataSetChanged();
         }
@@ -246,14 +288,44 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    public void initNavMenu()
+    {
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        View hView =  navigationView.getHeaderView(0);//(R.layout.nav_header_main);
+
+        ImageView photo = (ImageView)hView.findViewById(R.id.ivFoto);
+        TextView tvFio = (TextView)hView.findViewById(R.id.tvFio);
+        TextView tvMail = (TextView)hView.findViewById(R.id.tvMail);
+        User user = User.getInstance(this);
+        tvFio.setText(user.getFio());
+        tvMail.setText(user.getEmail());
+       if (user.getAvatarImg() != null && user.getAvatarImg().length > 0)
+        {
+            Bitmap image = Utils.decodePhoto(user.getAvatarImg(), 50, 50);
+            photo.setImageBitmap(image);
+        }
+        else
+        {
+            photo.setImageResource(R.mipmap.ic_launcher);
+        }
+    }
+
     @Override
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
+        User user = User.getInstance(this);
         try {
+            user.authorizedCheck();
             loadTasks();
             loadTasksFromLocal();
-        } catch (Exception e) {
+        }
+        catch (UserNotAuthException e)
+        {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+        catch (Exception e) {
             Log.d(TAG, "loadTasks ошибка: " + e.getMessage(), e);
+            Toast.makeText(this, "Произошла ошибка", Toast.LENGTH_LONG).show();
         } finally {
             swipeRefreshLayout.setRefreshing(false);
         }
@@ -270,7 +342,6 @@ public class MainActivity extends AppCompatActivity
             new FetchTasks().execute(false);
         }
     }
-
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -289,97 +360,97 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-private class FetchTasks extends AsyncTask<Boolean, Void, Void> {
-    private String error;
+    private class FetchTasks extends AsyncTask<Boolean, Void, Void> {
+        private String error;
 
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        mLoading = true;
-        mHandler.sendEmptyMessage(SHOW_PROGRESS);
-    }
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mLoading = true;
+            mHandler.sendEmptyMessage(SHOW_PROGRESS);
+        }
 
-    @Override
-    protected Void doInBackground(Boolean... params) {
-        ClaimeList claimeList = ClaimeList.get(MainActivity.this);
-        try {
-            if (!params[0]) {
-                //Загрузка из локальной БД
-                DBHelper db = new DBHelper(MainActivity.this);
-                claimeList.setItems(db.getClameListFromDb());
-            } else {
-                //Загрузка с сервера
-                NetFetcher nf = new NetFetcher(MainActivity.this);
-                ClaimeStatusList cslist = nf.fetchStatuses();
-                cslist.saveToDb();
-                cslist.loadFromDb();
-                //ClaimeStatusList.set(nf.fetchStatuses(), MainActivity3.this);
-                AddressList addressList = nf.fetchAddresses();
-                addressList.saveToDb();
-                addressList.loadFromDb();
-                //AddressList.set(nf.fetchAddresses(), MainActivity3.this);
-                ServiceList serviceList = nf.fetchServices();
-                serviceList.saveToDb();
-                serviceList.loadFromDb();
-                //ServiceList.set(nf.fetchServices(), MainActivity3.this);
+        @Override
+        protected Void doInBackground(Boolean... params) {
+            ClaimeList claimeList = ClaimeList.get(MainActivity.this);
+            try {
+                if (!params[0]) {
+                    //Загрузка из локальной БД
+                    DBHelper db = new DBHelper(MainActivity.this);
+                    claimeList.setItems(db.getClameListFromDb());
+                } else {
+                    //Загрузка с сервера
+                    NetFetcher nf = new NetFetcher(MainActivity.this);
+                    ClaimeStatusList cslist = nf.fetchStatuses();
+                    cslist.saveToDb();
+                    ClaimeStatusList.get(MainActivity.this).loadFromDb();
+                    //ClaimeStatusList.set(nf.fetchStatuses(), MainActivity3.this);
+                    AddressList addressList = nf.fetchAddresses();
+                    addressList.saveToDb();
+                    addressList.loadFromDb();
+                    //AddressList.set(nf.fetchAddresses(), MainActivity3.this);
+                    ServiceList serviceList = nf.fetchServices();
+                    serviceList.saveToDb();
+                    serviceList.loadFromDb();
+                    //ServiceList.set(nf.fetchServices(), MainActivity3.this);
 
-                claimeList.setItems(nf.fetchClaims());
-                claimeList.saveToDb();
-                DBHelper db = new DBHelper(MainActivity.this);
-                claimeList.setItems(db.getClameListFromDb());
+                    claimeList.setItems(nf.fetchClaims());
+                    claimeList.saveToDb();
+                    DBHelper db = new DBHelper(MainActivity.this);
+                    claimeList.setItems(db.getClameListFromDb());
 
 
+                }
+
+            } catch (JSONException e) {
+                error = "Ошибка :" + e.getMessage();
+                Log.d(TAG, error, e);
+            } catch (IOException e) {
+                error = "Ошибка :" + e.getMessage();
+                Log.d(TAG, error, e);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            try {
+                if (error != null) {
+                    Toast.makeText(MainActivity.this, error, Toast.LENGTH_LONG);
+                }
+
+                setupAdapter();
+                mHandler.sendEmptyMessage(STOP_PROGRESS);
+            } finally {
+                mLoading = false;
             }
 
-        } catch (JSONException e) {
-            error = "Ошибка :" + e.getMessage();
-            Log.d(TAG, error, e);
-        } catch (IOException e) {
-            error = "Ошибка :" + e.getMessage();
-            Log.d(TAG, error, e);
         }
-        return null;
     }
 
-    @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
-        try {
-            if (error != null) {
-                Toast.makeText(MainActivity.this, error, Toast.LENGTH_LONG);
+
+    private class MyHandler extends android.os.Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case SHOW_PROGRESS:
+                    mPropgress.setVisibility(View.VISIBLE);
+                    mHandler.removeMessages(SHOW_PROGRESS);
+                    break;
+
+                case STOP_PROGRESS:
+                    mPropgress.setVisibility(View.INVISIBLE);
+                    mHandler.removeMessages(STOP_PROGRESS);
+                    break;
+
+                case NETWORK_FAILURE:
+                    Toast.makeText(MainActivity.this, "Ошибка соединения!", Toast.LENGTH_LONG).show();
+                    mHandler.removeMessages(NETWORK_FAILURE);
+                    break;
             }
-
-            setupAdapter();
-            mHandler.sendEmptyMessage(STOP_PROGRESS);
-        } finally {
-            mLoading = false;
+            super.handleMessage(msg);
         }
-
     }
-}
-
-
-private class MyHandler extends android.os.Handler {
-    @Override
-    public void handleMessage(Message msg) {
-        switch (msg.what) {
-            case SHOW_PROGRESS:
-                mPropgress.setVisibility(View.VISIBLE);
-                mHandler.removeMessages(SHOW_PROGRESS);
-                break;
-
-            case STOP_PROGRESS:
-                mPropgress.setVisibility(View.INVISIBLE);
-                mHandler.removeMessages(STOP_PROGRESS);
-                break;
-
-            case NETWORK_FAILURE:
-                Toast.makeText(MainActivity.this, "Ошибка соединения!", Toast.LENGTH_LONG).show();
-                mHandler.removeMessages(NETWORK_FAILURE);
-                break;
-        }
-        super.handleMessage(msg);
-    }
-}
 
 }
