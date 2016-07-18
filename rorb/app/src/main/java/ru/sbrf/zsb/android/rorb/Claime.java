@@ -48,13 +48,11 @@ public class Claime {
         mCreateAt = createAt;
     }
 
-    public Date getLocalCreateAt()
-    {
+    public Date getLocalCreateAt() {
         return Utils.getLocalDate(mCreateAt);
     }
 
-    public Date getLocalUpdateAt()
-    {
+    public Date getLocalUpdateAt() {
         return Utils.getLocalDate(mUpdateAt);
     }
 
@@ -71,7 +69,8 @@ public class Claime {
 
     public void setClaimeStateId(int claimeStateId) {
         mClaimeStateId = claimeStateId;
-        mStatus = new ClaimeStatus(ClaimeStatusList.get(mContext).getStateByID(mClaimeStateId));
+        ClaimeStatusList cl = ClaimeStatusList.get(mContext);
+        mStatus = new ClaimeStatus(cl.getStateByID(mClaimeStateId));
     }
 
     public void setUpdateBy(String updateBy) {
@@ -133,6 +132,8 @@ public class Claime {
         result.put(ClaimeConstant.CLAIME_STATE_ID_TAG, mStatus.getId());
         result.put(ClaimeConstant.DESCRIPTION_TAG, mDescription);
         result.put(ClaimeConstant.SOLUTION_TAG, mSolution);
+        boolean isNew = ClaimeStatusList.isNew(mStatus);
+
         result.put(ClaimeConstant.CREATE_AT_TAG, Utils.getStringFromDateTime(getCreateAt()));
         result.put(ClaimeConstant.UPDATE_AT_TAG, Utils.getStringFromDateTime(getUpdateAt()));
         result.put(ClaimeConstant.HAS_PHOTOS_TAG, mPhotoList.size() > 0);
@@ -148,6 +149,13 @@ public class Claime {
 
     public String getId() {
         return mId;
+    }
+
+    public String getClaimeNum() {
+        if (ClaimeStatusList.isNew(mStatus)) {
+            return "";
+        }
+        return mId.toString();
     }
 
     public void setId(String id) {
@@ -172,29 +180,31 @@ public class Claime {
 
     public String getDatePart() {
         String format = "dd.MM.yyyy";
+        boolean isNew = ClaimeStatusList.isNew(mStatus);
+
         if (getUpdateAt() == null) {
             if (getCreateAt() != null) {
-                return Utils.getStringFromDateTime(getLocalCreateAt(), format);
-            }
-            else
-                return null;
+                return Utils.getStringFromDateTime(isNew ? getCreateAt() : getLocalCreateAt(), format);
+                //return Utils.getStringFromDateTime(getCreateAt(), format);
+            } else
+                return "";
         }
-        return Utils.getStringFromDateTime(getLocalUpdateAt(), format);
+        return Utils.getStringFromDateTime(isNew ? getUpdateAt() : getLocalUpdateAt(), format);
+        //return Utils.getStringFromDateTime(getUpdateAt(), format);
     }
 
     public String getTimePart() {
         String format = "HH:mm";
+        boolean isNew = ClaimeStatusList.isNew(mStatus);
         if (getUpdateAt() == null) {
             if (getCreateAt() != null) {
-                return Utils.getStringFromDateTime(getCreateAt(), format);
-            }
-            else
-            {
-                return null;
+                return Utils.getStringFromDateTime(isNew ? getCreateAt() : getLocalCreateAt(), format);
+            } else {
+                return "";
             }
 
         }
-        return Utils.getStringFromDateTime(getUpdateAt(), format);
+        return Utils.getStringFromDateTime(isNew ? getUpdateAt() : getLocalUpdateAt(), format);
     }
 
     public Service getService() {
@@ -215,10 +225,10 @@ public class Claime {
         if (getId() == ClaimeConstant.NEW_CLAIME_ID) {
             String id = db.getVirtualIdForClaime();
             this.setId(id);
-            ClaimeList.get(mContext).getItems().add(0, this);
+            //ClaimeList.get(mContext).getItems().add(0, this);
         }
         saveToLocalDb();
-        //db.saveClaimeToDb(this);
+        db.saveClaimeToDb(this);
         return this.getId();
     }
 
@@ -228,14 +238,13 @@ public class Claime {
         setAddressId(json.getInt(ClaimeConstant.ADDRESS_ID_TAG));
         setClaimeStateId(json.getInt(ClaimeConstant.CLAIME_STATE_ID_TAG));
         setDescription(Utils.fromJsonString(json, ClaimeConstant.DESCRIPTION_TAG));
-        setSolution(Utils.fromJsonString(json,ClaimeConstant.SOLUTION_TAG));
+        setSolution(Utils.fromJsonString(json, ClaimeConstant.SOLUTION_TAG));
         setCreateAt(Utils.ConvertToDate(json.optString(ClaimeConstant.CREATE_AT_TAG)));
         setUpdateBy(json.optString(ClaimeConstant.UPDATE_AT_TAG));
         setHasPhotos(json.getBoolean(ClaimeConstant.HAS_PHOTOS_TAG));
 
         JSONArray photos = json.getJSONArray(ClaimeConstant.PHOTO_ARR_TAG);
-        if (photos != null)
-        {
+        if (photos != null) {
             for (int i = 0; i < photos.length(); i++) {
                 mPhotoList.add(new Photo(getId(), photos.getJSONObject(i)));
             }
@@ -260,8 +269,7 @@ public class Claime {
     }
 
     public void saveToLocalDb() {
-        if (ClaimeStatusList.isNew(mStatus) )
-        {
+        if (ClaimeStatusList.isNew(mStatus)) {
             mUpdateAt = new Date();
         }
         DBHelper db = new DBHelper(mContext);
@@ -270,16 +278,16 @@ public class Claime {
 
     //Удаление заявки из локальной базы но не удаляет из списка
     public void deleteFromDb() {
+
         DBHelper db = new DBHelper(mContext);
         db.openDB();
         db.beginTransaction();
         try {
-            db.deleteClaime(this.getId());
+            int id = db.deleteClaime(this.getId());
             db.setTransactionSuccessful();
-        }
-        finally {
-          db.endTransaction();
-          db.close();
+        } finally {
+            db.endTransaction();
+            db.close();
         }
 
     }

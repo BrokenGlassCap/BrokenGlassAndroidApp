@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -28,6 +29,7 @@ import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -41,11 +43,9 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -53,16 +53,20 @@ import ru.sbrf.zsb.android.helper.ExpandableHeightGridView;
 import ru.sbrf.zsb.android.helper.MultilineSpinnerAdapter;
 import ru.sbrf.zsb.android.helper.ClaimeConstant;
 import ru.sbrf.zsb.android.helper.GridViewImageAdapter;
+import ru.sbrf.zsb.android.helper.MyLocationManager;
+import ru.sbrf.zsb.android.helper.OnLocationDetectectionListener;
 import ru.sbrf.zsb.android.helper.PhotoGridConstant;
 import ru.sbrf.zsb.android.helper.Utils;
 import ru.sbrf.zsb.android.netload.NetFetcher;
 
-public class TaskActivity extends AppCompatActivity {
+public class TaskActivity extends AppCompatActivity
+         {
 
     public static final String EXTRA_TASK_ID = "ru.sbrf.zsb.rorb.task_id";
     private static final String TAG = "TaskActivity";
     private static final int REQUEST_PHOTO_FROM_CAM = 1;
     private static final int REQUEST_PHOTO_FROM_GALLERY = 2;
+    private static final int REQUEST_ADDRESS = 3;
 
     private Claime mClaime;
     private TextView mStatus;
@@ -79,13 +83,15 @@ public class TaskActivity extends AppCompatActivity {
     private GridViewImageAdapter gridPhotoAdapter;
     private ExpandableHeightGridView gridView;
     private int columnWidth;
-    private AutoCompleteTextView mAddressAutocomplite;
     private TextView mInfoLabel;
     private boolean mSending;
     private TextView mPhotoLabel;
     private TextView mStatusDate;
     private TextView mStatusTime;
     private ScrollView mScroll;
+    private TextView mResultInfo;
+    private TextView mAddressLabel;
+    private ImageButton mAddressButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +103,9 @@ public class TaskActivity extends AppCompatActivity {
             }
         }
 
-        String taskID =  getIntent().getStringExtra(EXTRA_TASK_ID);
+
+
+        String taskID = getIntent().getStringExtra(EXTRA_TASK_ID);
         mClaimeList = ClaimeList.get(this);
         mStatus = (TextView) findViewById(R.id.task_activity_tvStatus);
         mStatusIcon = (ImageView) findViewById(R.id.task_activity_ivStatus);
@@ -110,32 +118,35 @@ public class TaskActivity extends AppCompatActivity {
         LinearLayout linInfo = (LinearLayout) findViewById(R.id.task_activity_linLayInfo);
         LayoutParams lpViewInfo = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 
+        mAddressButton = (ImageButton) findViewById(R.id.task_activity_address_btn);
 
+        mAddress = (TextView) findViewById(R.id.task_activity_address_txt);
+
+        //mAddress = new TextView(this);
+        //mAddress.setText(mClaime.getAddress().toString());
+        //mAddress.setLayoutParams(lpViewAddress);
+        // mAddress.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        //linAddress.addView(mAddress);
 
         if (Integer.parseInt(taskID) > 0) {
             //Открытие заявки
             mClaime = mClaimeList.getClaimeById(taskID);
 
-            if (mClaime.getPhotoList().size()  == 0)
-            {
+            if (mClaime.getPhotoList().size() == 0) {
                 mClaime.loadPhotosFromLocal();
             }
 
             if (mClaime.getPhotoList().size() == 0) {
                 loadPhotos();
             }
+            mAddressButton.setVisibility(View.INVISIBLE);
 
             mService = new TextView(this);
             mService.setText(mClaime.getService().getName());
             mService.setLayoutParams(lpViewService);
             mService.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-
             linService.addView(mService);
-            mAddress = new TextView(this);
-            mAddress.setText(mClaime.getAddress().toString());
-            mAddress.setLayoutParams(lpViewAddress);
-            mAddress.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-            linAddress.addView(mAddress);
+
 
             mInfoLabel = new TextView(this);
             linInfo.addView(mInfoLabel);
@@ -146,24 +157,22 @@ public class TaskActivity extends AppCompatActivity {
             if (taskID.equals(ClaimeConstant.NEW_CLAIME_ID)) {
 
                 mClaime = new Claime(this);
-                ClaimeList.get(this).getItems().add(mClaime);
+                ClaimeList.get(this).getItems().add(0, mClaime);
                 mIsNew = true;
             } else {
                 mClaime = ClaimeList.get(this).getClaimeById(taskID);
-                if (mClaime.getPhotoList() != null &&  mClaime.getPhotoList().size() == 0)
-                {
+                if (mClaime.getPhotoList() != null && mClaime.getPhotoList().size() == 0) {
                     mClaime.loadPhotosFromLocal();
                 }
             }
             mClaime.setStatus(new ClaimeStatus(ClaimeStatusList.get(this).getStateByID(1)));
 
             //Новая заявка
-            MultilineSpinnerAdapter serviceArrayAdapter = new MultilineSpinnerAdapter(this, R.layout.multiline_spinner_item,  ServiceList.get(this));
+            MultilineSpinnerAdapter serviceArrayAdapter = new MultilineSpinnerAdapter(this, R.layout.multiline_spinner_item, ServiceList.get(this));
             mServiceSpinner = new Spinner(this);
             mServiceSpinner.setLayoutParams(lpViewService);
             linService.addView(mServiceSpinner);
-            if (mClaime.getService() != null)
-            {
+            if (mClaime.getService() != null) {
                 ServiceList list = ServiceList.get(this);
                 mServiceSpinner.setSelection(list.getServiceIndexById(mClaime.getService().getId()));
             }
@@ -196,9 +205,16 @@ public class TaskActivity extends AppCompatActivity {
                     }
                 }
             });
+            mAddressButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent i = new Intent(TaskActivity.this, AddressActivity.class);
+                    i.putExtra(AddressActivity.EXTRA_ADDRESS_ID, mClaime.getAddress() == null ? 0 : mClaime.getAddress().getId());
+                    startActivityForResult(i, REQUEST_ADDRESS);
+                }
+            });
 
-
-            MultilineSpinnerAdapter addressArrayAdapter =
+           /* MultilineSpinnerAdapter addressArrayAdapter =
                     new MultilineSpinnerAdapter(this, R.layout.multiline_spinner_item,  AddressList.get(this));
             //android.R.layout. expandable_list_item_1
 
@@ -234,15 +250,16 @@ public class TaskActivity extends AppCompatActivity {
                     }
                 }
             });
+            */
 
-            mInfo = new  EditText(this);// findViewById(R.id.task_activity_tvInfo);
+            mInfo = new EditText(this);// findViewById(R.id.task_activity_tvInfo);
             mInfo.setEms(10);
             mInfo.setSingleLine(false);
             mInfo.setImeOptions(EditorInfo.IME_FLAG_NO_ENTER_ACTION);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.FILL_PARENT);
             params.gravity = Gravity.CENTER_HORIZONTAL;
             mInfo.setLayoutParams(params);
-            mInfo.setLines(3);
+            //mInfo.setLines(3);
 
             mInfo.setText(mClaime.getDescription());
             mInfo.setLayoutParams(lpViewInfo);
@@ -265,13 +282,27 @@ public class TaskActivity extends AppCompatActivity {
 
             linInfo.addView(mInfo);
 
-            mStatusDate = (TextView) findViewById(R.id.task_activity_tvDate);
-            mStatusDate.setText(mClaime.getDatePart());
-            mStatusTime = (TextView) findViewById(R.id.task_activity_tvTime);
-            mStatusTime.setText(mClaime.getTimePart());
 
+
+           /* mAddressLabel = (TextView) findViewById(R.id.task_activity_address);
+            mAddressLabel.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent i = new Intent(TaskActivity.this, AddressActivity.class);
+                    i.putExtra( MediaStore.EXTRA_OUTPUT, mClaime.getAddress() == null? 0 : mClaime.getAddress().getId());
+                    startActivityForResult(i, REQUEST_ADDRESS);
+                }
+            });
+            */
 
         }
+
+        setAddressText();
+
+        mStatusDate = (TextView) findViewById(R.id.task_activity_tvDate);
+        mStatusDate.setText(mClaime.getDatePart());
+        mStatusTime = (TextView) findViewById(R.id.task_activity_tvTime);
+        mStatusTime.setText(mClaime.getTimePart());
 
         mStatusIcon.setImageResource(ClaimeStatusList.getStateImage(mClaime.getStateID()));
         mStatus.setText(mClaime.getStatus().getName());
@@ -282,8 +313,10 @@ public class TaskActivity extends AppCompatActivity {
         gridPhotoAdapter = new GridViewImageAdapter(TaskActivity.this, mClaime, columnWidth);
         gridView.setAdapter(gridPhotoAdapter);
         mPhotoLabel = (TextView) findViewById(R.id.task_activity_photo_cnt_tv);
-        updatePhotoLabel();
 
+        mResultInfo = (TextView) findViewById(R.id.task_activity_result_info);
+        mResultInfo.setText(mClaime.getSolution());
+        setTitle(getString(R.string.task_activity_title) + " " + mClaime.getClaimeNum());
         mScroll = (ScrollView) findViewById(R.id.task_activity_scroll);
 
         mScroll.post(new Runnable() {
@@ -291,29 +324,40 @@ public class TaskActivity extends AppCompatActivity {
                 mScroll.scrollTo(0, 0);
             }
         });
+
+        updatePhotoLabel();
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        exitActivity();
+        //super.onBackPressed();
+    }
+
+    private void setAddressText() {
+        Address address = mClaime.getAddress();
+        if (address != null)
+            mAddress.setText(address.toString());
     }
 
     public void updatePhotoLabel() {
-        String text = getString(R.string.photo_cnt_label) + (mClaime.getPhotoList() == null? 0: mClaime.getPhotoList().size());
+        String text = getString(R.string.photo_cnt_label) + (mClaime.getPhotoList() == null ? 0 : mClaime.getPhotoList().size());
         mPhotoLabel.setText(text.toString());
     }
 
 
     //Блокировка кот
-    private void lockControls(boolean locked)
-    {
-        if (mServiceSpinner != null)
-        {
+    private void lockControls(boolean locked) {
+        if (mServiceSpinner != null) {
             mServiceSpinner.setEnabled(!locked);
         }
 
-        if (mAddressSpinner != null)
-        {
+        if (mAddressSpinner != null) {
             mAddressSpinner.setEnabled(!locked);
         }
 
-        if (mInfo != null)
-        {
+        if (mInfo != null) {
             mInfo.setEnabled(!locked);
         }
     }
@@ -336,36 +380,13 @@ public class TaskActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (isSending())
-        {
+        if (isSending()) {
             Toast.makeText(this, R.string.wait_sending_message, Toast.LENGTH_SHORT).show();
             return super.onOptionsItemSelected(item);
         }
         switch (item.getItemId()) {
             case android.R.id.home:
-                boolean res = false;
-                if (!mIsNew) {
-                    if (NavUtils.getParentActivityName(this) != null) {
-                        NavUtils.navigateUpFromSameTask(this);
-                    }
-                } else {
-                    AlertDialog.Builder alert = new AlertDialog.Builder(this);
-                    alert.setTitle("Заявка не сохранена");
-                    alert.setMessage("Выйти без сохранения заявки?");
-
-                    alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            //Удаляем несохраненную заявку
-                            ClaimeList.get(TaskActivity.this).getItems().remove(mClaime);
-                            if (NavUtils.getParentActivityName(TaskActivity.this) != null) {
-                                NavUtils.navigateUpFromSameTask(TaskActivity.this);
-                            }
-                        }
-                    });
-                    alert.setNegativeButton(android.R.string.cancel, null);
-                    alert.show();
-                }
+                exitActivity();
                 return true;
             case R.id.add_photo_from_cam: {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -383,6 +404,10 @@ public class TaskActivity extends AppCompatActivity {
 
             case R.id.save_task:
                 //Сохранение заявки в локальную базу
+                if (!validateClaime(mClaime))
+                {
+                    return true;
+                }
                 String clId = mClaime.SaveNewClame();
                 if (NavUtils.getParentActivityName(TaskActivity.this) != null) {
                     NavUtils.navigateUpFromSameTask(TaskActivity.this);
@@ -390,7 +415,11 @@ public class TaskActivity extends AppCompatActivity {
                 Toast.makeText(TaskActivity.this, R.string.claime_saved_local, Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.send_task:
-                mClaime.SaveNewClame();
+                //mClaime.SaveNewClame();
+                if (!validateClaime(mClaime))
+                {
+                    return true;
+                }
                 new SaveClaimeToServer().execute(mClaime);
                 return true;
         }
@@ -398,8 +427,80 @@ public class TaskActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    //Валидация заявки
+    private boolean validateClaime(Claime claime) {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle("Внимание");
+        alert.setPositiveButton(android.R.string.ok, null);
+
+        if (Utils.isNullOrWhitespace(claime.getDescription()))
+        {
+            alert.setMessage("Опишите проблему");
+            alert.show();
+            return false;
+        }
+
+        if (claime.getService() == null || claime.getService().getId() == 0)
+        {
+            alert.setMessage("Задайте службу");
+            alert.show();
+            return false;
+        }
+
+        if (claime.getAddress() == null || claime.getAddress().getId() == 0)
+        {
+            alert.setMessage("Задайте адрес");
+            alert.show();
+            return false;
+        }
+
+        if (claime.getPhotoList() == null || claime.getPhotoList().isEmpty())
+        {
+            alert.setMessage("Необходимо прикрепить фото");
+            alert.show();
+            return false;
+        }
+        return true;
+    }
+
+    private void exitActivity() {
+        if (!mIsNew) {
+            if (NavUtils.getParentActivityName(this) != null) {
+                NavUtils.navigateUpFromSameTask(this);
+            }
+        } else {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setTitle("Заявка не сохранена");
+            alert.setMessage("Выйти без сохранения заявки?");
+
+            alert.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    //Удаляем несохраненную заявку
+                    ClaimeList.get(TaskActivity.this).getItems().remove(mClaime);
+                    if (NavUtils.getParentActivityName(TaskActivity.this) != null) {
+                        NavUtils.navigateUpFromSameTask(TaskActivity.this);
+                    }
+                }
+            });
+            alert.setNegativeButton(android.R.string.cancel, null);
+            alert.show();
+        }
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_ADDRESS) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                int addressId = data.getIntExtra(AddressActivity.EXTRA_ADDRESS_ID, 0);
+                if (addressId != 0) {
+                    //Запоминаем адрес
+                    Address address = AddressList.get(this).getAddressByID(addressId);
+                    mClaime.setAddress(new Address(address));
+                    setAddressText();
+                }
+            }
+        }
         if (requestCode == REQUEST_PHOTO_FROM_CAM) {
             if (resultCode == Activity.RESULT_OK) {
 
@@ -408,24 +509,19 @@ public class TaskActivity extends AppCompatActivity {
                 mClaime.getPhotoList().add(p);
                 updatePhotoLabel();
                 gridPhotoAdapter.notifyDataSetChanged();
-            } else if (resultCode == Activity.RESULT_CANCELED) {
-                Log.d(TAG, "Отмена фото");
             }
             mPhotoFile = null;
         }
 
-        if (requestCode == REQUEST_PHOTO_FROM_GALLERY)
-        {
+        if (requestCode == REQUEST_PHOTO_FROM_GALLERY) {
             if (resultCode == Activity.RESULT_OK && null != data) {
                 Uri selectedImage = data.getData();
 
                 String picturePath = null;
 
-                if (new File(selectedImage.getPath()).isFile())
-                {
+                if (new File(selectedImage.getPath()).isFile()) {
                     picturePath = selectedImage.getPath();
-                }
-                else {
+                } else {
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
                     Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
 
@@ -439,8 +535,6 @@ public class TaskActivity extends AppCompatActivity {
                 mClaime.getPhotoList().add(p);
                 updatePhotoLabel();
                 gridPhotoAdapter.notifyDataSetChanged();
-            } else if (resultCode == Activity.RESULT_CANCELED) {
-                Log.d(TAG, "Отмена фото");
             }
         }
     }
@@ -496,6 +590,8 @@ public class TaskActivity extends AppCompatActivity {
         return mSending;
     }
 
+
+
     private class LoadPhotosTask extends AsyncTask<Claime, Void, Claime> {
 
         @Override
@@ -513,6 +609,7 @@ public class TaskActivity extends AppCompatActivity {
         protected void onPostExecute(Claime claime) {
             super.onPostExecute(claime);
             gridPhotoAdapter.notifyDataSetChanged();
+            updatePhotoLabel();
         }
     }
 
@@ -524,9 +621,9 @@ public class TaskActivity extends AppCompatActivity {
             try {
                 JSONObject json = params[0].toJson();
                 JSONObject innerJson = new JSONObject();
-                innerJson.put("Email", NetFetcher.UserToken);
+                innerJson.put("Email", User.getInstance(TaskActivity.this).getEmail());
                 json.put("User", innerJson);
-                String uri = Uri.parse(NetFetcher.ENDPOINT).buildUpon()
+                String uri = Uri.parse(NetFetcher.ENDPOINT_API).buildUpon()
                         .appendPath(NetFetcher.CLAIMS)
                         .build().toString();
 
@@ -535,7 +632,7 @@ public class TaskActivity extends AppCompatActivity {
                 e.printStackTrace();
                 return e.getMessage();
             }
-            return  result;
+            return result;
         }
 
         @Override
@@ -567,7 +664,7 @@ public class TaskActivity extends AppCompatActivity {
                 //Connect
                 urlConnection = (HttpURLConnection) ((new URL(uri).openConnection()));
                 urlConnection.setConnectTimeout(60000);
-                urlConnection.setRequestProperty("Authorization", NetFetcher.getUserToken());
+                urlConnection.setRequestProperty("Authorization", User.getInstance(TaskActivity.this).getFullToken());
                 urlConnection.setDoOutput(true);
                 urlConnection.setRequestProperty("Content-Type", "application/json");
                 urlConnection.setRequestProperty("Accept", "application/json");
@@ -595,8 +692,8 @@ public class TaskActivity extends AppCompatActivity {
                 mClaime.updateFromJson(savedjson);
                 mClaime.saveToLocalDb();
 
-            } catch (Exception e){
-                Log.d(MainActivity.TAG, e.getMessage());
+            } catch (Exception e) {
+                Log.d(MainActivity3.TAG, e.getMessage());
                 result = "Ошибка при отправке заявки на сервер";
             }
             return result;

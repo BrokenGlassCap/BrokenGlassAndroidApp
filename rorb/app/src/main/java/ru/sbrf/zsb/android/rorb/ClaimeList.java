@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 /**
  * Created by Oleg on 08.05.2016.
@@ -40,13 +39,28 @@ public class ClaimeList {
         Log.d(MainActivity.TAG, "Загрузка заявок в БД завершена");
     }
 
+    public void  deleteLocalClames()
+    {
+        DBHelper db = new DBHelper(mContext);
+        db.openDB();
+        db.beginTransaction();
+        try{
+            db.deleteClaimes();
+            mItems.clear();
+            db.setTransactionSuccessful();
+        }
+        finally {
+            db.endTransaction();
+        }
+    }
+
     public void deleteClaime(Claime claime)
     {
         DBHelper db = new DBHelper(mContext);
         db.openDB();
         db.beginTransaction();
         try{
-            db.deleteClaime(claime.getId());
+            int id = db.deleteClaime(claime.getId());
             mItems.remove(claime);
             db.setTransactionSuccessful();
         }

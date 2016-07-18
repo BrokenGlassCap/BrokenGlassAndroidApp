@@ -7,9 +7,6 @@ import android.widget.Toast;
 
 import org.json.JSONException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 import ru.sbrf.zsb.android.netload.NetFetcher;
 
 /**
@@ -44,16 +41,17 @@ public class ClaimeStatusList extends RefObjectList<ClaimeStatus> {
 
     public ClaimeStatusList(Context c) {
         super(c);
-        addAllStatus();
+        //addAllStatus();
     }
 
-    private void addAllStatus() {
+   /* private void addAllStatus() {
         ClaimeStatus claimeStatus = new ClaimeStatus();
         claimeStatus.setId(STATUS_ALL_ID);
         claimeStatus.setName(mContext.getString(R.string.claime_status_all_name));
         claimeStatus.setCode(mContext.getString(R.string.claime_status_all_code));
         add(claimeStatus);
     }
+    */
 
     public static ClaimeStatusList get(Context c) {
         if (mList == null) {
@@ -87,8 +85,9 @@ public class ClaimeStatusList extends RefObjectList<ClaimeStatus> {
     public void loadFromDb() {
         DBHelper db = new DBHelper(mContext);
         clear();
-        addAllStatus();
-        this.addAll(db.getStatusListFromDb());
+        //addAllStatus();
+        ClaimeStatusList list = db.getStatusListFromDb();
+        this.addAll(list);
     }
 
 
@@ -123,7 +122,7 @@ public class ClaimeStatusList extends RefObjectList<ClaimeStatus> {
                 Toast.makeText(mContext, error, Toast.LENGTH_LONG);
             } else {
                 Toast.makeText(mContext, "Загрузка статусов завершена!", Toast.LENGTH_LONG);
-                Log.d(MainActivity.TAG, "Загрузка статусов завершена!");
+                Log.d(MainActivity3.TAG, "Загрузка статусов завершена!");
             }
         }
     }
