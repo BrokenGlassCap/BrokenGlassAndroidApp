@@ -73,10 +73,11 @@ public class LogonActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            LogonActivity.this.enableControls(true);
             LogonActivity.this.mProgress.setVisibility(View.INVISIBLE);
-            if (!Utils.isNullOrWhitespace(s))
+            if (!Utils.isNullOrWhitespace(error))
             {
-                Toast.makeText(LogonActivity.this, s, Toast.LENGTH_LONG).show();
+                Toast.makeText(LogonActivity.this, error, Toast.LENGTH_LONG).show();
             }
             else
             {
@@ -94,12 +95,11 @@ public class LogonActivity extends AppCompatActivity {
             }
             catch (FileNotFoundException ex)
             {
-                error = "Некорректные данные подключения!";
+                error = "Некорректные данные для подключения!";
                 return error;
             }
             catch (Exception ex)
             {
-
                 error = "Ошибка при входе на сервер!";
                 return error;
             }
