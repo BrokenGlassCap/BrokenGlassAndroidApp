@@ -90,7 +90,7 @@ public class RegistrationActivity extends AppCompatActivity implements AsyncHand
             return result;
         }
 
-        if (!Objects.equals(password, confirmPassword)){
+        if (!password.equals(confirmPassword)){
             confirmPasswordInput.setError("Пароль и его подтверждение должны совпадать.");
             return result;
         }

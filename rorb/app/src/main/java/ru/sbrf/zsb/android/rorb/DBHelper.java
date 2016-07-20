@@ -359,7 +359,6 @@ public class DBHelper extends SQLiteOpenHelper {
         Cursor c = null;
         openDB();
         c = mDb.query(ADDRESS_TBL, null, null, null, null, null, orderBy);
-
         if (c != null) {
             if (c.moveToFirst()) {
                 String str;

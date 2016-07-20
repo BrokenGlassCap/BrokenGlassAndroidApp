@@ -409,10 +409,15 @@ public class TaskActivity extends AppCompatActivity
                     return true;
                 }
                 String clId = mClaime.SaveNewClame();
+                Toast.makeText(TaskActivity.this, R.string.claime_saved_local, Toast.LENGTH_SHORT).show();
                 if (NavUtils.getParentActivityName(TaskActivity.this) != null) {
                     NavUtils.navigateUpFromSameTask(TaskActivity.this);
                 }
-                Toast.makeText(TaskActivity.this, R.string.claime_saved_local, Toast.LENGTH_SHORT).show();
+                else
+                {
+                    finish();
+                }
+
                 return true;
             case R.id.send_task:
                 //mClaime.SaveNewClame();
@@ -468,6 +473,10 @@ public class TaskActivity extends AppCompatActivity
             if (NavUtils.getParentActivityName(this) != null) {
                 NavUtils.navigateUpFromSameTask(this);
             }
+            else
+            {
+                finish();
+            }
         } else {
             AlertDialog.Builder alert = new AlertDialog.Builder(this);
             alert.setTitle("Заявка не сохранена");
@@ -480,6 +489,10 @@ public class TaskActivity extends AppCompatActivity
                     ClaimeList.get(TaskActivity.this).getItems().remove(mClaime);
                     if (NavUtils.getParentActivityName(TaskActivity.this) != null) {
                         NavUtils.navigateUpFromSameTask(TaskActivity.this);
+                    }
+                    else
+                    {
+                        finish();
                     }
                 }
             });
@@ -648,6 +661,10 @@ public class TaskActivity extends AppCompatActivity
                 Toast.makeText(TaskActivity.this, "Заявка отправлена!", Toast.LENGTH_SHORT).show();
                 if (NavUtils.getParentActivityName(TaskActivity.this) != null) {
                     NavUtils.navigateUpFromSameTask(TaskActivity.this);
+                }
+                else
+                {
+                    finish();
                 }
             } else {
                 Toast.makeText(TaskActivity.this, s, Toast.LENGTH_SHORT).show();

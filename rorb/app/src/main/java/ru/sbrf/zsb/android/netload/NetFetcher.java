@@ -51,8 +51,8 @@ import ru.sbrf.zsb.android.rorb.UserRegistrationModel;
  * Created by Администратор on 27.05.2016.
  */
 public class NetFetcher {
-    public static final String ENDPOINT_SERVER = "http://192.168.1.245:8050/";
-    //public static final String ENDPOINT_SERVER = "http://217.116.48.210:8085/";
+    //public static final String ENDPOINT_SERVER = "http://192.168.1.245:8050/";
+    public static final String ENDPOINT_SERVER = "http://217.116.48.210:8085/";
     public static final String ENDPOINT_API = ENDPOINT_SERVER + "api/";
 
     //public static final String ENDPOINT_API = "http://muzychenkoaa-001-site2.ftempurl.com/api/";
