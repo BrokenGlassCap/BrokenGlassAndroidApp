@@ -17,21 +17,21 @@
         android:layout_width="86dp"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-        android:src="@drawable/my_foto"
+        android:src="@mipmap/ic_launcher"
         android:layout_weight="0.59" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-        android:text="Клемцов Олег Валерьевич"
+        android:text=""
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:id="@+id/tvFio" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-        android:text="ovklemtsov@sberbank.ru"
+        android:text=""
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:id="@+id/tvMail" />
 

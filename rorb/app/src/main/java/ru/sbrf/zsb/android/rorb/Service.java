@@ -16,17 +16,15 @@ public class Service extends RefObject {
     private Date mUpdateAt;
     private String mUpdateBy;
 
-    public Service()
-    {
+    public Service() {
 
     }
 
-    public Service(Service serv)
-    {
+    public Service(Service serv) {
         this.setId(serv.getId());
         this.setName(serv.getName());
         this.setOrder(serv.getOrder());
-        this.setUpdateAt((Date)serv.getUpdateAt().clone());
+        this.setUpdateAt(serv.getUpdateAt() == null ? null : (Date) serv.getUpdateAt().clone());
         this.setUpdateBy(serv.getUpdateBy());
     }
 

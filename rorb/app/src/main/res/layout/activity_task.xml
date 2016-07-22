@@ -22,7 +22,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="1"
-                >
+                android:layout_marginTop="5dp">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -73,49 +73,73 @@
 
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/task_activity_linLayService"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    style="?android:listSeparatorTextViewStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/task_activity_service_label"/>
-
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:id="@+id/task_activity_linLayAddress"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/task_activity_linLayService"
-                android:orientation="vertical">
-
-                <TextView
-                    style="?android:listSeparatorTextViewStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/task_activity_address_label"/>
-
-            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/task_activity_linLayInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/task_activity_linLayAddress"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:layout_marginTop="5dp"
+                android:weightSum="1">
 
                 <TextView
-                    style="?android:listSeparatorTextViewStyle"
-                    android:layout_width="match_parent"
+                    android:layout_width="55dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/task_activity_info_label"/>
+                    android:text="@string/task_activity_info_label"
+                    />
 
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/task_activity_linLayService"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="5dp">
+
+                <TextView
+                    android:layout_width="55dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/task_activity_service_label"
+                    />
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:id="@+id/task_activity_linLayAddress"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/task_activity_linLayService"
+                android:orientation="horizontal"
+                android:layout_marginTop="5dp">
+
+                <TextView
+                    android:layout_width="55dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/task_activity_address_label"
+                    android:clickable="false"
+                    android:id="@+id/task_activity_address"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Выберите адрес"
+                    android:id="@+id/task_activity_address_txt"
+                    android:textSize="20sp"
+                    android:layout_gravity="top|bottom"
+                    android:minLines="2"
+                    android:layout_weight="1"/>
+
+                <ImageButton
+                    android:layout_width="41dp"
+                    android:layout_height="41dp"
+                    android:id="@+id/task_activity_address_btn"
+                    android:src="@android:drawable/ic_menu_mylocation"
+                    android:layout_gravity="center"/>
 
             </LinearLayout>
 
@@ -124,14 +148,15 @@
                 android:layout_height="wrap_content"
                 android:layout_alignEnd="@+id/task_activity_linLayInfo"
                 android:layout_below="@+id/task_activity_linLayInfo"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_marginTop="5dp">
 
                 <TextView
                     android:id="@+id/task_activity_photo_cnt_tv"
-                    style="?android:listSeparatorTextViewStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/task_activity_photo_cnt_label"/>
+                    android:text="@string/task_activity_photo_cnt_label"
+                    />
             </LinearLayout>
 
             <ru.sbrf.zsb.android.helper.ExpandableHeightGridView xmlns:android="http://schemas.android.com/apk/res/android"
@@ -143,6 +168,29 @@
                                                                  android:scrollbars="horizontal"
                                                                  android:stretchMode="columnWidth">
             </ru.sbrf.zsb.android.helper.ExpandableHeightGridView>
+
+            <LinearLayout
+                android:id="@+id/task_activity_linLayResultInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="5dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/task_activity_result_info_label"
+                    />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/task_activity_result_info"
+
+                    />
+
+            </LinearLayout>
         </LinearLayout>
+
+
     </FrameLayout>
 </ScrollView>

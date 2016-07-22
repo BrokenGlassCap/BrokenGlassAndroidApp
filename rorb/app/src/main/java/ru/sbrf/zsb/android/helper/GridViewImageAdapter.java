@@ -73,7 +73,7 @@ public class GridViewImageAdapter extends BaseAdapter {
             imageView = (ImageView) convertView;
         }
 
-        Bitmap image = decodePhoto(mClaime.getPhotoList().get(position).getThumbnail(), imageWidth,
+        Bitmap image = Utils.decodePhoto(mClaime.getPhotoList().get(position).getThumbnail(), imageWidth,
                 imageWidth);
 
         imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -137,57 +137,6 @@ public class GridViewImageAdapter extends BaseAdapter {
         }
     }
 
-    /*
-     * Resizing image size
-     */
 
-    public static Bitmap decodePhoto(byte[] file, int WIDTH, int HEIGHT)
-    {
-        if (file == null)
-            return null;
-
-        BitmapFactory.Options o = new BitmapFactory.Options();
-        o.inJustDecodeBounds = true;
-
-        BitmapFactory.decodeStream(new ByteArrayInputStream(file), null, o);
-
-
-        final int REQUIRED_WIDTH = WIDTH;
-        final int REQUIRED_HIGHT = HEIGHT;
-        int scale = 1;
-        while (o.outWidth / scale / 2 >= REQUIRED_WIDTH
-                && o.outHeight / scale / 2 >= REQUIRED_HIGHT)
-            scale *= 2;
-
-        BitmapFactory.Options o2 = new BitmapFactory.Options();
-        o2.inSampleSize = scale;
-        return BitmapFactory.decodeStream(new ByteArrayInputStream(file), null, o2);
-    }
-
-    public static Bitmap decodeFile(String filePath, int WIDTH, int HEIGHT) {
-        try {
-
-            File f = new File(filePath);
-
-            BitmapFactory.Options o = new BitmapFactory.Options();
-            o.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(new FileInputStream(f), null, o);
-
-
-            final int REQUIRED_WIDTH = WIDTH;
-            final int REQUIRED_HIGHT = HEIGHT;
-            int scale = 1;
-            while (o.outWidth / scale / 2 >= REQUIRED_WIDTH
-                    && o.outHeight / scale / 2 >= REQUIRED_HIGHT)
-                scale *= 2;
-
-            BitmapFactory.Options o2 = new BitmapFactory.Options();
-            o2.inSampleSize = scale;
-            return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
 }

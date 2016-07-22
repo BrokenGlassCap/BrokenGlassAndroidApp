@@ -5,9 +5,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.location.Location;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 
 import ru.sbrf.zsb.android.exceptions.UserInsertDbException;
@@ -65,6 +68,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 + " osb_name text,"
                 + " city text,"
                 + " location text,"
+                + " address_name text,"
                 + " latitude real,"
                 + " longitude real,"
                 + " update_at datetime,"
@@ -346,13 +350,15 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
+
+
     public AddressList getAddressListFromDb() {
         AddressList result = new AddressList(mContext);
         String orderBy = " city, location";
+
         Cursor c = null;
         openDB();
         c = mDb.query(ADDRESS_TBL, null, null, null, null, null, orderBy);
-
         if (c != null) {
             if (c.moveToFirst()) {
                 String str;
@@ -362,10 +368,13 @@ public class DBHelper extends SQLiteOpenHelper {
                     address.setOsbCode(c.getInt(c.getColumnIndex("osb_code")));
                     address.setName(c.getString(c.getColumnIndex("osb_name")));
                     address.setCity(c.getString(c.getColumnIndex("city")));
-                    address.setAddressName(c.getString(c.getColumnIndex("location")));
+                    address.setAddressName(c.getString(c.getColumnIndex("address_name")));
                     address.setLocation(c.getString(c.getColumnIndex("location")));
-                    address.setLatitude(c.getFloat(c.getColumnIndex("latitude")));
-                    address.setLongitude(c.getFloat(c.getColumnIndex("longitude")));
+                    float latitude = c.getFloat(c.getColumnIndex("latitude"));
+                    address.setLatitude(latitude);
+                    float longitude = c.getFloat(c.getColumnIndex("longitude"));
+                    address.setLongitude(longitude);
+                    address.setDistance(Utils.calcDistance(Utils.getCurrLocation() , latitude, longitude));
                     address.setUpdateAt(Utils.ConvertToDateSQLITE(c.getString(c.getColumnIndex("update_at"))));
                     address.setUpdateBy(c.getString(c.getColumnIndex("update_by")));
                     result.add(address);
@@ -386,6 +395,7 @@ public class DBHelper extends SQLiteOpenHelper {
             val.put("osb_name", address.getName());
             val.put("city", address.getCity());
             val.put("location", address.getLocation());
+            val.put("address_name", address.getAddressName());
             val.put("latitude", address.getLatitude());
             val.put("longitude", address.getLongitude());
             val.put("update_at", Utils.getStringFromDateSQLITE(address.getUpdateAt()));
@@ -406,6 +416,7 @@ public class DBHelper extends SQLiteOpenHelper {
             val.put("osb_name", address.getName());
             val.put("city", address.getCity());
             val.put("location", address.getLocation());
+            val.put("address_name", address.getAddressName());
             val.put("latitude", address.getLatitude());
             val.put("longitude", address.getLongitude());
             val.put("update_at", Utils.getStringFromDateSQLITE(address.getUpdateAt()));
@@ -715,6 +726,39 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
+    /*public User getUserByEmailFromDb(String email)
+    {
+        User result = null;
+        if (Utils.isNullOrWhitespace(email))
+        {
+            return  result;
+        };
+
+        Cursor c = null;
+        openDB();
+        try {
+            c = mDb.query(USER_TBL, null, "UPPER(email) = ?", new String[]{email.toUpperCase()}, null, null, null);
+
+            if (c != null) {
+                try {
+                    if (c.moveToFirst()) {
+                        String str;
+                        result = new User();
+                        parseUserFromCursorRow(result, c);
+                    }
+                }
+                finally {
+                    c.close();
+                }
+            }
+        }
+        finally {
+            mDb.close();
+        }
+        return result;
+    }
+
+
     public UserList getUserListFromDb() {
 
         UserList result = new UserList(mContext);
@@ -762,9 +806,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public User insertUserIntoDb(User user) throws UserInsertDbException{
-        String email = user.getEmail();
-        if (user == null || user.isEmpty()){
-            throw new NullPointerException("Ошибка! Попытка создания пользователя в БД без Email");
+        if (user == null){
+           throw new NullPointerException();
         }
         openDB();
         try{
@@ -816,6 +859,7 @@ public class DBHelper extends SQLiteOpenHelper {
         user.setAvatarImg(c.getBlob(c.getColumnIndex("avatar_img")));
         user.setIsLogin( c.getInt(c.getColumnIndex("is_login")) == 1);
     }
+    */
 
     public void beginTransaction() {
         mDb.beginTransaction();
@@ -830,7 +874,11 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
 
-    public void deleteClaime(String id) {
-        mDb.delete(CLAIME_TBL, " _id = ?", new String[]{id});
+    public int deleteClaime(String id) {
+        return mDb.delete(CLAIME_TBL, " _id = ?", new String[]{id});
+    }
+
+    public void deleteClaimes() {
+        mDb.delete(CLAIME_TBL, null, null);
     }
 }

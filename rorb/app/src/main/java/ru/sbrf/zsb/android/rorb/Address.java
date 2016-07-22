@@ -5,7 +5,6 @@ import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.StringTokenizer;
 
 import ru.sbrf.zsb.android.helper.AddressConstants;
 import ru.sbrf.zsb.android.helper.Utils;
@@ -22,10 +21,46 @@ public class Address extends RefObject {
     private Float mLongitude;
     private Date mUpdateAt;
     private String mUpdateBy;
+    private float mDistance;
+    private String mUpperString;
+
+    public float getDistance() {
+        return mDistance;
+    }
+
+    public void setDistance(float distance) {
+        mDistance = distance;
+    }
 
     @Override
     public String toString() {
-        return String.format("%s, %s, %s", mCity, mName, mAddressName );
+        return String.format("%s, %s, %s", mCity, mAddressName, mLocation );
+    }
+
+    public String getUpperInfo()
+    {
+        return mUpperString;
+    }
+
+
+    public String getTextDistance()
+    {
+        if (mDistance == 0)
+        {
+            return "н.д.";
+        }
+        else
+        {
+            if (mDistance <= 1000)
+            {
+                return String.format("%.0f м", mDistance);
+            }
+            else
+            {
+                return String.format("%.1f км", mDistance/1000f);
+            }
+        }
+
     }
 
     public Address()
@@ -45,6 +80,8 @@ public class Address extends RefObject {
         this.mLongitude = address.getLongitude();
         this.mUpdateBy = address.getUpdateBy();
         this.mUpdateAt = (Date)address.getUpdateAt();
+        this.mDistance = address.getDistance();
+        mUpperString = address.toString().toUpperCase();
     }
 
     public Address(JSONObject json) throws JSONException {
@@ -58,6 +95,7 @@ public class Address extends RefObject {
         mLongitude = BigDecimal.valueOf(json.getDouble(AddressConstants.LONGITUDE_TAG)).floatValue();
         mUpdateAt = Utils.ConvertToDate(json.getString(AddressConstants.UPDATEAT_TAG));
         mUpdateBy = Utils.fromJsonString(json, AddressConstants.UPDATEBY_TAG);
+        mUpperString = this.toString().toUpperCase();
     }
 
     public String  getUpdateBy() {
@@ -130,5 +168,10 @@ public class Address extends RefObject {
 
     public void setId(int id) {
         mId = id;
+    }
+
+
+    public void recalcDistance() {
+       mDistance = Utils.calcDistance(Utils.getCurrLocation(), mLatitude, mLongitude);
     }
 }

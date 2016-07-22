@@ -4,6 +4,7 @@ package ru.sbrf.zsb.android.netload;
 import android.content.Context;
 import android.net.Uri;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -12,16 +13,22 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 import ru.sbrf.zsb.android.exceptions.UserRegistrationException;
@@ -32,17 +39,22 @@ import ru.sbrf.zsb.android.rorb.Claime;
 import ru.sbrf.zsb.android.rorb.ClaimeStatus;
 import ru.sbrf.zsb.android.rorb.ClaimeStatusList;
 import ru.sbrf.zsb.android.rorb.DBHelper;
+import ru.sbrf.zsb.android.rorb.MainActivity;
 import ru.sbrf.zsb.android.rorb.MainActivity3;
+import ru.sbrf.zsb.android.rorb.R;
 import ru.sbrf.zsb.android.rorb.Service;
 import ru.sbrf.zsb.android.rorb.ServiceList;
+import ru.sbrf.zsb.android.rorb.User;
 import ru.sbrf.zsb.android.rorb.UserRegistrationModel;
 
 /**
  * Created by Администратор on 27.05.2016.
  */
 public class NetFetcher {
-    public static final String ENDPOINT_API = "http://192.168.1.245:8050/api/";
-    public static final String ENDPOINT_SERVER = "http://192.168.1.245:8050/";
+    //public static final String ENDPOINT_SERVER = "http://192.168.1.245:8050/";
+    public static final String ENDPOINT_SERVER = "http://217.116.48.210:8085/";
+    public static final String ENDPOINT_API = ENDPOINT_SERVER + "api/";
+
     //public static final String ENDPOINT_API = "http://muzychenkoaa-001-site2.ftempurl.com/api/";
     public static final String SERVICES = "Services";
     public static final String SERVICE_STATUS = "ClaimStates";
@@ -50,41 +62,32 @@ public class NetFetcher {
     //public static final String TAG = "NetFetcher";
     public static final String CLAIMS = "Claims";
     public static final String USER_TOKEN_PARAM = "userEmail";
-    public static final String UserToken = "zsbdeveloper@gmail.com";
     private static final String LAST_UPDATE_PARAM = "lastUpdateDate";
     private static final String REGISTRATION = "Registration";
-    private static final String REGISTRATION_PARAM_EMAIL = "Email";
-    private static final String REGISTRATION_PARAM_PASSWORD = "Password";
-    private static final String REGISTRATION_PARAM_CONFIRM_PASS = "ConfirmPassword";
+    private static final String OAUTH = "oauth";
+    private static final String TOKEN = "token";
+    private static final int TIMEOUT = 30000;
 
     private Context mContext;
-    private String mUsername;
-
+    private String mLastError;
     public String getLastError() {
         return mLastError;
     }
 
-    private String mLastError;
-
-    public static String getUserToken() {
-        return "bearer e5dvKEyeypOB-0Fn7HvmsoMgtHeMJPfgab2PtqfmS1d4XLrxIBms7NwebW1Ge768KXTKv-v4QUWeKqvXj_AJsxtSC4xAEg8rTbOADa1jQyi_wyyVm7tDPXYCca_FLQbf1ZPUdwUKXOaUwwWjkwULAacYBKHrd68cetLq6zKK_NSwyXFz--4F3A3UzTQtsNLtvXOqsGKRt2xDvC2474MgkDmdLs-BkNHGibvH6wMPGino8vOsu4pPEmG-Rpdwupv4Tq8y4LkxvWZ7zNipA4vfpt4TNbfLIwgSz1SeQ0_rZVEzlzGxka9yXM9bSDBi_G2SaXzWtQUjVMqsRlu1kflYnv1i1LoNqTn0GBjXhcp7AQV5NIlhsoZfec5im4smaoBuUutNVnBGxGf0aE_-sDPrcX-M9aCFH9si1dbevb12gzyBoLf26Z06TibiT0l5DNM9LQ34kKVXMrpTHrRXDImiRbiL7rJQZmFCl4s_XIIGwjGu7XduHewbeEAYq4rb15Pb";
-        //return "bearer ag50dRQOxyJdDFTMwS-EroLLWiTwIIb_zGeLEMR3JnLs03MaOgkvoqpBofW56xh6QBJZMdIrbHwmK8fQvNYlYKmiXNIRRQzFWZhjuBPcmATXD3axv44gXajfej9oZn0kbyUQnO97K8_t6qWjjxRSYAWImSYCgygnlslZ_uxlDrLwCjGSCHqNwihKluBkl5wUpIK9xDSWOI3h_tbIpsXi8hFT-W6xCV-fCLg3LBHPIaXMBhBJNO2RpM-z2Fg4u-d1Oft4yCDSkBSiO1u3D5wLuoorORsKTO0QA82XLobTFG5KAdCBolW0Vcq5OUaHKSeb3xZMw6RUqESStZzIbAcv_zSh8IpqKS7JOrkeBBvHzpDmsJrljoLOHO5aJYV_OCABgVQpzlUYMZwfEZ_1UshGX0-tdjNUdc01rmdGrD3Wa4yWh04cAGcLNnr_RRm-OBOAmqngINOFBr3Q1hXjyGUihMCsy1ACRGAdUg7PMHDtoStPbUhSFQ0Rye4jRpg0D3-W";
-    }
 
     public NetFetcher(Context context) {
         mContext = context;
-        mUsername = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext())
-                .getString(MainActivity3.USER_TOKEN, NetFetcher.UserToken);
     }
 
     //Возвращает массив байт, принятых по сети
     byte[] getUrlBytes(String urlSpec) throws IOException {
+        String token = User.getInstance(mContext).getFullToken();
         mLastError = null;
         URL url = new URL(urlSpec);
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("Authorization", getUserToken());
-            connection.setConnectTimeout(30000);
+            connection.setRequestProperty("Authorization", token);
+            connection.setConnectTimeout(TIMEOUT);
             try {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 InputStream in = new BufferedInputStream(connection.getInputStream());
@@ -102,7 +105,11 @@ public class NetFetcher {
             } finally {
                 connection.disconnect();
             }
-        } catch (Exception e) {
+        }
+     catch (SocketTimeoutException ex) {
+        throw new SocketTimeoutException("Сервер не доступен, попробуте позже");
+    }
+        catch (Exception e) {
             Log.d(MainActivity3.TAG, e.getMessage());
             return null;
         }
@@ -121,12 +128,13 @@ public class NetFetcher {
 
     //Читаем заявки из сети
     public ArrayList<Claime> fetchClaims() throws JSONException {
-        Log.d(MainActivity3.TAG, "Считывание заявок по сети");
+        User user = User.getInstance(mContext);
+        Log.d(MainActivity.TAG, "Считывание заявок по сети");
         ArrayList<Claime> result = new ArrayList<>();
         try {
             String url = Uri.parse(NetFetcher.ENDPOINT_API).buildUpon()
                     .appendPath(NetFetcher.CLAIMS)
-                    .appendQueryParameter(NetFetcher.USER_TOKEN_PARAM, mUsername)
+                    .appendQueryParameter(NetFetcher.USER_TOKEN_PARAM, user.getEmail())
                     .build().toString();
             String xmlString = getUrl(url);
             if (!Utils.isNullOrWhitespace(xmlString)) {
@@ -135,11 +143,11 @@ public class NetFetcher {
                     result.add(new Claime(arr.getJSONObject(i), mContext));
                 }
             }
-            Log.d(MainActivity3.TAG, "Считывание заявок по сети завершено");
+            Log.d(MainActivity.TAG, "Считывание заявок по сети завершено");
 
         } catch (IOException ioe) {
 
-            Log.e(MainActivity3.TAG, "Ошибка при чтении заявок: " + ioe.getMessage(), ioe);
+            Log.e(MainActivity.TAG, "Ошибка при чтении заявок: " + ioe.getMessage(), ioe);
         }
         return result;
     }
@@ -285,44 +293,52 @@ public class NetFetcher {
 
     public void userRegistration(UserRegistrationModel user) throws UserRegistrationException {
         HttpURLConnection connection = null;
-        try{
+        try {
             String url = Uri.parse(NetFetcher.ENDPOINT_SERVER).buildUpon()
                     .appendPath(NetFetcher.REGISTRATION)
                     .build().toString();
             connection = (HttpURLConnection) (new URL(url).openConnection());
             connection.setDoOutput(true);
-            connection.setConnectTimeout(30000);
+            connection.setConnectTimeout(TIMEOUT);
             connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type","application/json");
+            connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "application/json");
             connection.connect();
 
             JSONObject outObj = new JSONObject();
-            outObj.put(NetFetcher.REGISTRATION_PARAM_EMAIL, user.getEmail());
-            outObj.put(NetFetcher.REGISTRATION_PARAM_PASSWORD, user.getPassword());
-            outObj.put(NetFetcher.REGISTRATION_PARAM_CONFIRM_PASS, user.getConfirmPassword());
+            outObj.put(User.EMAIL, user.getEmail());
+            outObj.put(User.REGISTRATION_PARAM_PASSWORD, user.getPassword());
+            outObj.put(User.REGISTRATION_PARAM_CONFIRM_PASS, user.getConfirmPassword());
             String testJson = outObj.toString();
 
             OutputStream outputStream = connection.getOutputStream();
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
-            try{
+            try {
                 writer.write(outObj.toString());
-            }
-            finally {
+            } finally {
                 writer.close();
                 outputStream.close();
             }
 
-
             //connection.getInputStream();
-
-            if (connection.getResponseCode() != HttpURLConnection.HTTP_CREATED){
-                throw new Exception("Регистрация не выполнена. На сервере произошила ошибка!");
+            int response = connection.getResponseCode();
+            switch (response) {
+                case HttpURLConnection.HTTP_CREATED:
+                    ;
+                    break;
+                case HttpURLConnection.HTTP_CONFLICT:
+                    throw new Exception("Учетная запись " + user.getEmail() + " уже зарегистрирована!");
+                default:
+                    throw new Exception("Регистрация не выполнена. На сервере произошила ошибка (код " + response + ")");
             }
+
+        } catch (SocketTimeoutException ex) {
+            throw new UserRegistrationException("Сервер не доступен, попробуте позже");
         }
+
         catch (Exception ex){
             Log.e("ERROR",ex.getMessage());
-            throw new UserRegistrationException();
+            throw new UserRegistrationException(ex.getMessage());
         }
         finally {
             if (connection != null){
@@ -330,6 +346,78 @@ public class NetFetcher {
             }
         }
 
+    }
+
+    //Получение нового токена
+    public void updateToken(User user) throws Exception {
+        if (Utils.isNullOrWhitespace(user.getEmail()) || Utils.isNullOrWhitespace(user.getPass()))
+        {
+            throw new IllegalArgumentException(mContext.getString(R.string.no_login_data));
+        }
+        String decodeUserPass = Utils.fromArrayToBase64((user.getEmail()+ ":" + user.getPass()).getBytes());
+        HttpURLConnection connection = null;
+        try{
+            String url = Uri.parse(NetFetcher.ENDPOINT_SERVER).buildUpon()
+                    .appendPath(NetFetcher.OAUTH)
+                    .appendPath(NetFetcher.TOKEN)
+                    .build().toString();
+            connection = (HttpURLConnection) (new URL(url).openConnection());
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(TIMEOUT);
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type","text/html");
+            connection.setRequestProperty("Accept", "application/json");
+
+            connection.setRequestProperty("Authorization", "Basic " + decodeUserPass);
+            connection.connect();
+
+
+            OutputStream outputStream = connection.getOutputStream();
+
+            String content = "grant_type=password&username=" + user.getEmail()+ "&password=" + user.getPass();
+
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+
+            try{
+                writer.write(content);
+            }
+            finally {
+                writer.close();
+                outputStream.close();
+            }
+
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+
+            String line = null;
+            StringBuilder sb = new StringBuilder();
+
+            while ((line = bufferedReader.readLine()) != null) {
+                sb.append(line);
+            }
+
+            bufferedReader.close();
+            JSONObject tokenInfo = new JSONObject(sb.toString());
+            user.setToken(Utils.fromJsonString(tokenInfo, User.ACCESS_TOKEN));
+            user.setTokenType(Utils.fromJsonString(tokenInfo, User.TOKEN_TYPE));
+            int expiredIn = tokenInfo.optInt(User.EXPIRES_IN);
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.SECOND, expiredIn);
+            user.setExpireToken(calendar.getTime());
+            user.saveLocal();
+
+        }
+        catch (SocketTimeoutException ex)
+        {
+            throw new SocketTimeoutException("Сервер не доступен, попробуте позже");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            if (connection != null){
+                connection.disconnect();
+            }
+        }
     }
 
 }

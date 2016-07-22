@@ -1,19 +1,75 @@
 package ru.sbrf.zsb.android.rorb;
 
 import android.content.Context;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.Collections;
+import java.util.Comparator;
+
+import ru.sbrf.zsb.android.helper.Utils;
 import ru.sbrf.zsb.android.netload.NetFetcher;
 
 public class AddressList extends RefObjectList<Address> {
     private static AddressList sAddressList;
+    private Comparator<Address> mDistComparator;
 
     public AddressList(Context c) {
         super(c);
+        mDistComparator = new Comparator<Address>() {
+            @Override
+            public int compare(Address lhs, Address rhs) {
+                int res;
+                if (lhs.getDistance() == rhs.getDistance()) {
+                    res = 0;
+                } else if (lhs.getDistance() > rhs.getDistance()) {
+                    res = 1;
+                } else {
+                    res = -1;
+                }
+
+                if (res == 0) {
+                    res = lhs.getCity().compareTo(rhs.getCity());
+                }
+
+                if (res == 0) {
+                    res = lhs.getAddressName().compareTo(rhs.getAddressName());
+                }
+
+                return res;
+            }
+        };
     }
 
+
+    public static void refresh()
+    {
+        if (sAddressList != null)
+        {
+            DBHelper db = new DBHelper(sAddressList.mContext);
+            Log.d(MainActivity3.TAG, "Запуск загрузки списка адресов из локальной бд");
+            sAddressList = db.getAddressListFromDb();
+        }
+    }
+
+    public AddressList getListWithLocation(boolean sort)
+    {
+        AddressList result = new AddressList(mContext);
+        for (Address address : sAddressList
+             ) {
+            address.setDistance(Utils.calcDistance(Utils.getCurrLocation(), address.getLatitude(), address.getLongitude()));
+            result.add(address);
+        }
+
+        if (sort)
+        {
+            Collections.sort(result, mDistComparator);
+        }
+        return result;
+    }
 
     public static AddressList get(Context c){
         if (sAddressList == null){
@@ -23,22 +79,6 @@ public class AddressList extends RefObjectList<Address> {
         }
         return sAddressList;
     }
-
-    /*public static void set(AddressList list, Context c)
-    {
-        if (list == null)
-        {
-            sAddressList = new AddressList(c);
-        }
-        else
-        {
-            sAddressList = list;
-        }
-        sAddressList.saveToDb();
-    }
-    */
-
-
 
     @Override
     public void saveToDb()
@@ -64,34 +104,23 @@ public class AddressList extends RefObjectList<Address> {
         return null;
     }
 
-    private class  FetchAddresses extends AsyncTask<Void, Void, Void> {
-
-        private String error;
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            NetFetcher nf = new NetFetcher(AddressList.this.mContext);
-            try {
-                sAddressList = nf.fetchAddresses();
-            } catch (Exception e) {
-                error = e.getMessage();
-            }
-            return null;
+    public AddressList useFilter(String query) {
+        AddressList result = new AddressList(mContext);
+        if (Utils.isNullOrWhitespace(query)) {
+            result.addAll(sAddressList);
+            return result;
         }
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            if (error != null) {
-                Toast.makeText(mContext, error, Toast.LENGTH_LONG);
+        for (Address addr :
+                sAddressList) {
+            if (addr.toString().toUpperCase().contains(query))
+            {
+                result.add(addr);
+                addr.recalcDistance();
             }
-            else {
-                Toast.makeText(mContext, "Загрузка адресов завершена", Toast.LENGTH_LONG);
-                Log.d(MainActivity3.TAG, "Загрузка адресов завершена");
-            }
-
-
         }
+
+        Collections.sort(result, mDistComparator);
+        return result;
     }
-
 }

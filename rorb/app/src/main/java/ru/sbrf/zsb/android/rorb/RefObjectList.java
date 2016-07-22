@@ -14,7 +14,14 @@ public abstract class RefObjectList<T> extends ArrayList<T> {
 
     public RefObjectList(Context c)
     {
-        mContext = c.getApplicationContext();;
+        mContext = c.getApplicationContext();
+    }
+
+    public RefObjectList(Context c, int capacity)
+    {
+        super(capacity);
+        mContext = c.getApplicationContext();
+
     }
 
 
