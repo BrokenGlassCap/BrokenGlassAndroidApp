@@ -518,6 +518,11 @@ public class TaskActivity extends AppCompatActivity
             if (resultCode == Activity.RESULT_OK) {
 
                 Photo p = new Photo(mClaime.getId(), true);
+                if (mPhotoFile == null || mPhotoFile.getPath() == null)
+                {
+                    Toast.makeText(this, "Ошибка: фото не передано камерой! Попробуйте повторить", Toast.LENGTH_LONG).show();
+                    return;
+                }
                 p.setFilename(mPhotoFile.getPath());
                 mClaime.getPhotoList().add(p);
                 updatePhotoLabel();
