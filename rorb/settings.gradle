@@ -1,1 +1,2 @@
-include ':app'
+include ':app', ':yandexmapkit'
+project(':yandexmapkit').projectDir = new File('libs/yandexmapkit-library/app')

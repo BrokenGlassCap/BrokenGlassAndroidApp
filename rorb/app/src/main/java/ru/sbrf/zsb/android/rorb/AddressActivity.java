@@ -1,10 +1,7 @@
 package ru.sbrf.zsb.android.rorb;
 
-import android.app.SearchManager;
-import android.app.SearchableInfo;
-import android.content.Context;
-import android.content.Intent;
-import android.location.Location;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,14 +10,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import java.util.Collections;
-import java.util.List;
-
+import ru.sbrf.zsb.android.fragments.AddressFragment;
+import ru.sbrf.zsb.android.fragments.MapListFragment;
 import ru.sbrf.zsb.android.helper.AddressAdapter;
 import ru.sbrf.zsb.android.helper.Utils;
 
@@ -50,24 +45,33 @@ public class AddressActivity extends AppCompatActivity implements SearchView.OnQ
         }*/
 
 
-        listView = (ListView) findViewById(android.R.id.list);
-
         mAddressId = getIntent().getIntExtra(EXTRA_ADDRESS_ID, 0);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Address address = (Address) ((ListView) parent).getAdapter().getItem(position);
-                Intent i = new Intent();
-                i.putExtra(EXTRA_ADDRESS_ID, address.getId());
-                AddressActivity.this.setResult(RESULT_OK, i);
-                finish();
-            }
-        });
+        selectItem(0);
 
-        mPropgress = (ProgressBar) findViewById(R.id.address_activity_progressBar);
+        //new LoadAddressTask().execute("");
+    }
 
-        new LoadAddressTask().execute("");
+    private void selectItem(int position) {
+        Fragment fragment = null;
+        switch (position) {
+            case 0:
+                fragment = new AddressFragment();
+                break;
+            case 1:
+                fragment = new MapListFragment();
+                break;
+            default:
+                break;
+        }
+
+        FragmentManager fm = getFragmentManager();
+
+        if (fragment != null) {
+            fm.beginTransaction()
+                    .add(R.id.address_content_frame, fragment)
+                    .commit();
+        }
     }
 
     @Override
