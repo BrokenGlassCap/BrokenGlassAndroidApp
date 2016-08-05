@@ -3,9 +3,10 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
-    <ru.sbrf.zsb.android.helper.SlidingTabLayout
+    <ru.sbrf.zsb.android.helper.MySlidingTabLayout
         android:id="@+id/sliding_tabs"
         android:layout_width="match_parent"
+        android:background="@color/colorPrimary"
         android:layout_height="wrap_content"/>
 
 

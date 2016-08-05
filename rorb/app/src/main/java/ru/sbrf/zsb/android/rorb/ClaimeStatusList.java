@@ -122,7 +122,7 @@ public class ClaimeStatusList extends RefObjectList<ClaimeStatus> {
                 Toast.makeText(mContext, error, Toast.LENGTH_LONG);
             } else {
                 Toast.makeText(mContext, "Загрузка статусов завершена!", Toast.LENGTH_LONG);
-                Log.d(MainActivity3.TAG, "Загрузка статусов завершена!");
+                Log.d(MainActivity.TAG, "Загрузка статусов завершена!");
             }
         }
     }

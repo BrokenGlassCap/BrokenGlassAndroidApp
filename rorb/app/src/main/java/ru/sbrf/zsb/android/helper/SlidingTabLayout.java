@@ -13,6 +13,8 @@ import android.view.View;
 import android.widget.HorizontalScrollView;
 import android.widget.TextView;
 
+import ru.sbrf.zsb.android.rorb.R;
+
 /**
  * Created by Администратор on 07.06.2016.
  */
@@ -38,7 +40,7 @@ public class SlidingTabLayout extends HorizontalScrollView {
 
     private static final int TITLE_OFFSET_DIPS = 24;
     private static final int TAB_VIEW_PADDING_DIPS = 16;
-    private static final int TAB_VIEW_TEXT_SIZE_SP = 12;
+    private static final int TAB_VIEW_TEXT_SIZE_SP = 16;
 
     private int mTitleOffset;
 
@@ -189,6 +191,7 @@ public class SlidingTabLayout extends HorizontalScrollView {
             }
 
             tabTitleView.setText(adapter.getPageTitle(i));
+            tabTitleView.setTextColor(getResources().getColorStateList(R.color.selector));
             tabView.setOnClickListener(tabClickListener);
 
             mTabStrip.addView(tabView);

@@ -7,4 +7,5 @@
     <color name="colorPrimaryDark">#2E7D32</color>
     <color name="colorAccent">#81C784</color>
     <color name="TextButtonColor">#FFFFFF</color>
+    <color name="TabColor">#05da1a</color>
 </resources>

@@ -16,8 +16,32 @@
         "source": "C:\\Users\\Oleg\\BrokenGlassAndroidApp\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\ymk_zoom_minus_drawable.xml"
     },
     {
+        "merged": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\ymk_ya_logo.png",
+        "source": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\ymk_ya_logo.png"
+    },
+    {
+        "merged": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\ymk_zoom_plus_drawable.xml",
+        "source": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\ymk_zoom_plus_drawable.xml"
+    },
+    {
+        "merged": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\ymk_find_me_drawable.xml",
+        "source": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\ymk_find_me_drawable.xml"
+    },
+    {
+        "merged": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\ymk_balloon_text_color.xml",
+        "source": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\ymk_balloon_text_color.xml"
+    },
+    {
+        "merged": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\ymk_zoom_minus_drawable.xml",
+        "source": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\ymk_zoom_minus_drawable.xml"
+    },
+    {
         "merged": "C:\\Users\\Oleg\\BrokenGlassAndroidApp\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\ymk_find_me_drawable.xml",
         "source": "C:\\Users\\Oleg\\BrokenGlassAndroidApp\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\ymk_find_me_drawable.xml"
+    },
+    {
+        "merged": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\ymk_tlight_loading.xml",
+        "source": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable\\ymk_tlight_loading.xml"
     },
     {
         "merged": "C:\\Users\\Oleg\\BrokenGlassAndroidApp\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable\\ymk_zoom_plus_drawable.xml",

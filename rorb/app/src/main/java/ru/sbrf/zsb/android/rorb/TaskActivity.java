@@ -715,7 +715,7 @@ public class TaskActivity extends AppCompatActivity
                 mClaime.saveToLocalDb();
 
             } catch (Exception e) {
-                Log.d(MainActivity3.TAG, e.getMessage());
+                Log.d(MainActivity.TAG, e.getMessage());
                 result = "Ошибка при отправке заявки на сервер";
             }
             return result;

@@ -2,5 +2,9 @@
     {
         "merged": "C:\\Users\\Oleg\\BrokenGlassAndroidApp\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable-en\\ymk_ya_logo.png",
         "source": "C:\\Users\\Oleg\\BrokenGlassAndroidApp\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable-en\\ymk_ya_logo.png"
+    },
+    {
+        "merged": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\res\\merged\\androidTest\\debug\\drawable-en\\ymk_ya_logo.png",
+        "source": "D:\\develop\\bestbank\\rorb\\libs\\yandexmapkit-library\\app\\build\\intermediates\\bundles\\debug\\res\\drawable-en\\ymk_ya_logo.png"
     }
 ]

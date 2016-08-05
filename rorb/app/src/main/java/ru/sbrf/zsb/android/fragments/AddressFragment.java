@@ -1,24 +1,24 @@
 package ru.sbrf.zsb.android.fragments;
 
-import android.app.ListFragment;
+import android.app.Fragment;
 import android.os.Bundle;
+
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 
+import ru.sbrf.zsb.android.helper.MySlidingTabLayout;
 import ru.sbrf.zsb.android.helper.SlidingTabLayout;
 import ru.sbrf.zsb.android.rorb.R;
 
 /**
  * Created by Oleg on 04.08.2016.
  */
-public class AddressFragment extends ListFragment {
-    private SlidingTabLayout mSlidingTabLayout;
+public class AddressFragment extends Fragment {
+    private MySlidingTabLayout mSlidingTabLayout;
     private ViewPager mViewPager;
-    private ListView mList;
 
     public AddressFragment()
     {
@@ -46,21 +46,25 @@ public class AddressFragment extends ListFragment {
         mViewPager.setAdapter(new SamplePagerAdapter());
         // Give the SlidingTabLayout the ViewPager, this must be
         // done AFTER the ViewPager has had it's PagerAdapter set.
-        mSlidingTabLayout = (SlidingTabLayout) view.findViewById(R.id.sliding_tabs);
+        mSlidingTabLayout = (MySlidingTabLayout) view.findViewById(R.id.sliding_tabs);
+
+        //mSlidingTabLayout.setCustomTabView(R.layout.custom_tab_item, R.id.textView2);
         mSlidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
             @Override
             public int getIndicatorColor(int position) {
-                return R.color.colorAccent;
+                return getResources().getColor(R.color.colorPrimaryDark);
             }
 
             @Override
             public int getDividerColor(int position) {
-                return R.color.colorPrimaryDark;
+                return getResources().getColor(R.color.colorPrimaryDark);
             }
         });
+
         mSlidingTabLayout.setViewPager(mViewPager);
-        mList = (ListView) view.findViewById(android.R.id.list);
     }
+
+
 
     class SamplePagerAdapter extends PagerAdapter{
 
@@ -94,6 +98,8 @@ public class AddressFragment extends ListFragment {
             {
                 resource = R.layout.fragment_address_map_view;
             }
+
+
 
             View view = getActivity().getLayoutInflater().inflate
                     ( resource,
